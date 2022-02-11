@@ -1,6 +1,22 @@
-import React, { useState } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
+import { Navigate } from 'react-router-dom';
+import AlertContext from '../../context/alert/AlertContext';
+import AuthContext from '../../context/auth/AuthContext';
 
 function Login() {
+  const alertContext = useContext(AlertContext);
+  const authContext = useContext(AuthContext);
+
+  const { setAlert } = alertContext;
+  const { loginUser, error, clearErrors, isAuthenticated } = authContext;
+
+  useEffect(() => {
+    if (error === 'Invalid Credentials') {
+      setAlert(error, 'danger');
+      clearErrors();
+    }
+  });
+
   const [user, setUser] = useState({
     email: '',
     password: '',
@@ -13,9 +29,17 @@ function Login() {
   }
 
   function onSubmit(e) {
-    console.log('Login submit');
+    if (email === '' || password === '') {
+      setAlert('Please fill in all fields', 'danger');
+    } else {
+      loginUser({ email, password });
+    }
 
     e.preventDefault();
+  }
+
+  if (isAuthenticated) {
+    return <Navigate to='/' />;
   }
 
   return (

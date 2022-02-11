@@ -9,7 +9,13 @@ import AlertState from './context/alert/AlertState';
 import Register from './components/auth/Register';
 import Login from './components/auth/Login';
 import Alerts from './components/layout/Alerts';
+import setAuthToken from './utils/setAuthToken';
+import PrivateRoute from './components/routing/PrivateRoute';
 import './App.css';
+
+if (localStorage.token) {
+  setAuthToken(localStorage.token);
+}
 
 function App() {
   return (
@@ -21,7 +27,14 @@ function App() {
             <div className='container'>
               <Alerts />
               <Routes>
-                <Route path='/' element={<Home />} />
+                <Route
+                  path='/'
+                  element={
+                    <PrivateRoute>
+                      <Home />
+                    </PrivateRoute>
+                  }
+                />
                 <Route path='/about' element={<About />} />
                 <Route path='/register' element={<Register />} />
                 <Route path='/login' element={<Login />} />

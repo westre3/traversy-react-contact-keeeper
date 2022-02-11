@@ -1,8 +1,9 @@
-import React, { useReducer } from 'react';
+import React, { useReducer, useEffect } from 'react';
 import axios from 'axios';
 
 import AuthContext from './AuthContext';
 import AuthReducer from './AuthReducer';
+import setAuthToken from '../../utils/setAuthToken';
 import {
   REGISTER_SUCCESS,
   REGISTER_FAIL,
@@ -26,9 +27,17 @@ function AuthState(props) {
   const [state, dispatch] = useReducer(AuthReducer, initialState);
 
   // Load User
+  async function loadUser() {
+    try {
+      const res = await axios.get('/api/auth');
+      dispatch({ type: USER_LOADED, payload: res.data });
+    } catch (error) {
+      dispatch({ type: AUTH_ERROR });
+    }
+  }
 
   // Register User
-  const register = async formData => {
+  async function register(formData) {
     const config = {
       headers: {
         'Content-Type': 'application/json',
@@ -38,16 +47,43 @@ function AuthState(props) {
     try {
       const res = await axios.post('/api/users', formData, config);
       dispatch({ type: REGISTER_SUCCESS, payload: res.data });
+      loadUser();
     } catch (error) {
       dispatch({ type: REGISTER_FAIL, payload: error.response.data.msg });
     }
-  };
+  }
 
   // Login User
+  async function loginUser(formData) {
+    const config = {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    };
+
+    try {
+      const res = await axios.post('/api/auth', formData, config);
+      dispatch({ type: LOGIN_SUCCESS, payload: res.data });
+    } catch (error) {
+      dispatch({ type: LOGIN_FAIL, payload: error.response.data });
+    }
+  }
 
   // Logout
+  function logoutUser() {
+    dispatch({ type: LOGOUT });
+  }
 
   // Clear Errors
+  function clearErrors() {
+    dispatch({ type: CLEAR_ERRORS });
+  }
+
+  setAuthToken(state.token);
+
+  useEffect(() => {
+    setAuthToken(state.token);
+  }, [state.token]);
 
   return (
     <AuthContext.Provider
@@ -58,6 +94,10 @@ function AuthState(props) {
         user: state.user,
         error: state.error,
         register,
+        clearErrors,
+        loadUser,
+        loginUser,
+        logoutUser,
       }}>
       {props.children}
     </AuthContext.Provider>
